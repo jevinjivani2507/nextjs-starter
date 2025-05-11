@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import TodoList from "./components/Todo";
 
 export default function Home() {
   const { data: session } = useSession();
@@ -44,6 +45,8 @@ export default function Home() {
             Get started with your amazing journey!
           </p>
         </div>
+
+        <TodoList />
       </div>
     </div>
   );
