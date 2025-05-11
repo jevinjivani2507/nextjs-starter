@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import TodoModel from "@/models/Todo";
-import { withMongoDb } from "@/middleware/mongodb";
+import { withAuth } from "@/middleware/withAuth";
 
 // GET single todo
-export const GET = withMongoDb(
-  async (_request: NextRequest, { params }: { params: { id: string } }) => {
+export const GET = withAuth(
+  async (
+    _request: NextRequest,
+    { params }: { params: { id: string } },
+    userId: string
+  ) => {
     try {
-      const todo = await TodoModel.findById(params.id);
+      const todo = await TodoModel.findOne({ _id: params.id, userId });
 
       if (!todo) {
         return NextResponse.json(
@@ -27,13 +31,17 @@ export const GET = withMongoDb(
 );
 
 // PUT (update) todo
-export const PUT = withMongoDb(
-  async (request: NextRequest, { params }: { params: { id: string } }) => {
+export const PUT = withAuth(
+  async (
+    request: NextRequest,
+    { params }: { params: { id: string } },
+    userId: string
+  ) => {
     try {
       const body = await request.json();
 
-      const updatedTodo = await TodoModel.findByIdAndUpdate(
-        params.id,
+      const updatedTodo = await TodoModel.findOneAndUpdate(
+        { _id: params.id, userId },
         { $set: { ...body } },
         { new: true, runValidators: true }
       );
@@ -56,10 +64,17 @@ export const PUT = withMongoDb(
 );
 
 // DELETE todo
-export const DELETE = withMongoDb(
-  async (_request: NextRequest, { params }: { params: { id: string } }) => {
+export const DELETE = withAuth(
+  async (
+    _request: NextRequest,
+    { params }: { params: { id: string } },
+    userId: string
+  ) => {
     try {
-      const deletedTodo = await TodoModel.findByIdAndDelete(params.id);
+      const deletedTodo = await TodoModel.findOneAndDelete({
+        _id: params.id,
+        userId,
+      });
 
       if (!deletedTodo) {
         return NextResponse.json(
