@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import { Schema, model, models } from "mongoose";
 
 export interface User {
   googleId: string;
@@ -18,7 +18,6 @@ const UserSchema: Schema = new Schema<User>({
   avatar: { type: String },
 });
 
-const UserModel =
-  mongoose?.models?.User || mongoose.model<User>("User", UserSchema) || null;
+const UserModel = models?.User || model<User>("User", UserSchema);
 
 export default UserModel;

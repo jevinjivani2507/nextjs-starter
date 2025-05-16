@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, model, models } from "mongoose";
 import { Todo } from "@/types/Todo";
 
 const TodoSchema: Schema = new Schema<Todo>(
@@ -15,7 +15,6 @@ const TodoSchema: Schema = new Schema<Todo>(
   { timestamps: true }
 );
 
-const TodoModel =
-  mongoose.models.Todo || mongoose.model<Todo>("Todo", TodoSchema);
+const TodoModel = models?.Todo || model<Todo>("Todo", TodoSchema);
 
 export default TodoModel;
