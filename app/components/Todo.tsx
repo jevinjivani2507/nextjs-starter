@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "sonner";
 import { motion, AnimatePresence, Variants } from "framer-motion";
+import { X } from "lucide-react";
 
 interface Todo {
   _id: string;
@@ -201,7 +202,7 @@ export default function TodoList() {
                 onClick={() => handleDeleteTodo(todo._id)}
                 className="p-1 text-red-500 hover:text-red-700 focus:outline-none"
               >
-                X
+                <X />
               </motion.button>
             </motion.li>
           ))}
