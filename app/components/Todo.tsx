@@ -1,6 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useTodos } from "@/hooks/useTodos";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+import { toast } from "sonner";
 
 interface Todo {
   _id: string;
@@ -9,83 +13,77 @@ interface Todo {
 }
 
 export default function TodoList() {
-  const [todos, setTodos] = useState<Todo[]>([]);
   const [newTodo, setNewTodo] = useState("");
+  const queryClient = useQueryClient();
+  const { todos, isTodosLoading, errorInFetchingTodos } = useTodos();
 
-  // Fetch todos
-  const fetchTodos = async () => {
-    try {
-      const response = await fetch("/api/todos");
-      if (!response.ok) throw new Error("Failed to fetch todos");
-      const data = await response.json();
-      setTodos(data);
-    } catch (error) {
-      console.error("Error fetching todos:", error);
-    }
-  };
+  const { mutate: addTodo } = useMutation({
+    mutationFn: async (todo: Omit<Todo, "_id">) => {
+      const response = await axios.post("/api/todos", todo);
+      return response.data;
+    },
+    onMutate: () => {
+      toast.loading("Adding todo...");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["todos"], exact: true });
+      toast.success("Todo added successfully");
+    },
+    onError: () => {
+      toast.error("Failed to add todo");
+    },
+    onSettled: () => {
+      toast.dismiss();
+    },
+  });
 
-  // Add todo
-  const addTodo = async (e: React.FormEvent) => {
+  const { mutate: toggleTodo } = useMutation({
+    mutationFn: async ({
+      id,
+      completed,
+    }: {
+      id: string;
+      completed: boolean;
+    }) => {
+      const response = await axios.put(`/api/todos/${id}`, { completed });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["todos"], exact: true });
+    },
+  });
+
+  const { mutate: deleteTodoMutation } = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await axios.delete(`/api/todos/${id}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["todos"], exact: true });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTodo.trim()) return;
-
-    try {
-      const response = await fetch("/api/todos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: newTodo, completed: false }),
-      });
-
-      if (!response.ok) throw new Error("Failed to add todo");
-      const data = await response.json();
-      setTodos([data, ...todos]);
-      setNewTodo("");
-    } catch (error) {
-      console.error("Error adding todo:", error);
-    }
+    addTodo({ title: newTodo, completed: false });
+    setNewTodo("");
+    toast.success("Todo added successfully");
   };
 
-  // Toggle todo completion
-  const toggleTodo = async (id: string) => {
-    try {
-      const todo = todos.find((t) => t._id === id);
-      if (!todo) return;
-
-      const response = await fetch(`/api/todos/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ completed: !todo.completed }),
-      });
-
-      if (!response.ok) throw new Error("Failed to update todo");
-      const updatedTodo = await response.json();
-      setTodos(todos.map((t) => (t._id === id ? updatedTodo : t)));
-    } catch (error) {
-      console.error("Error updating todo:", error);
-    }
+  const handleToggleTodo = (id: string, currentCompleted: boolean) => {
+    toggleTodo({ id, completed: !currentCompleted });
+    toast.success("Todo updated successfully");
   };
 
-  // Delete todo
-  const deleteTodo = async (id: string) => {
-    try {
-      const response = await fetch(`/api/todos/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) throw new Error("Failed to delete todo");
-      setTodos(todos.filter((t) => t._id !== id));
-    } catch (error) {
-      console.error("Error deleting todo:", error);
-    }
+  const handleDeleteTodo = (id: string) => {
+    deleteTodoMutation(id);
+    toast.success("Todo deleted successfully");
   };
-
-  useEffect(() => {
-    fetchTodos();
-  }, []);
 
   return (
     <div className="max-w-2xl mx-auto p-4">
-      <form onSubmit={addTodo} className="mb-6">
+      <form onSubmit={handleSubmit} className="mb-6">
         <div className="flex gap-2">
           <input
             type="text"
@@ -104,7 +102,7 @@ export default function TodoList() {
       </form>
 
       <ul className="space-y-3">
-        {todos.map((todo) => (
+        {todos?.data.map((todo: Todo) => (
           <li
             key={todo._id}
             className="flex items-center gap-3 p-3 bg-white rounded-lg shadow"
@@ -112,7 +110,7 @@ export default function TodoList() {
             <input
               type="checkbox"
               checked={todo.completed}
-              onChange={() => toggleTodo(todo._id)}
+              onChange={() => handleToggleTodo(todo._id, todo.completed)}
               className="w-5 h-5 border-2 rounded focus:ring-blue-500"
             />
             <span
@@ -123,7 +121,7 @@ export default function TodoList() {
               {todo.title}
             </span>
             <button
-              onClick={() => deleteTodo(todo._id)}
+              onClick={() => handleDeleteTodo(todo._id)}
               className="p-1 text-red-500 hover:text-red-700 focus:outline-none"
             >
               X
