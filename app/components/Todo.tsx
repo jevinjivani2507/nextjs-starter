@@ -5,12 +5,55 @@ import { useTodos } from "@/hooks/useTodos";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "sonner";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 
 interface Todo {
   _id: string;
   title: string;
   completed: boolean;
 }
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.3,
+    },
+  },
+};
+
+const todoVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 24,
+    },
+  },
+  exit: {
+    opacity: 0,
+    x: -100,
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 24,
+    },
+  },
+};
+
+const checkboxVariants: Variants = {
+  checked: {
+    scale: 1,
+    transition: { type: "spring", stiffness: 500, damping: 30 },
+  },
+  unchecked: { scale: 1 },
+  tap: { scale: 0.85 },
+};
 
 export default function TodoList() {
   const [newTodo, setNewTodo] = useState("");
@@ -84,7 +127,12 @@ export default function TodoList() {
   return (
     <div className="max-w-2xl mx-auto p-4">
       <form onSubmit={handleSubmit} className="mb-6">
-        <div className="flex gap-2">
+        <motion.div
+          className="flex gap-2"
+          initial={{ opacity: 0, y: 100 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 24 }}
+        >
           <input
             type="text"
             value={newTodo}
@@ -92,43 +140,73 @@ export default function TodoList() {
             placeholder="Add a new todo..."
             className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <button
+          <motion.button
             type="submit"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.95 }}
             className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             Add
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       </form>
 
-      <ul className="space-y-3">
-        {todos?.data.map((todo: Todo) => (
-          <li
-            key={todo._id}
-            className="flex items-center gap-3 p-3 bg-white rounded-lg shadow"
-          >
-            <input
-              type="checkbox"
-              checked={todo.completed}
-              onChange={() => handleToggleTodo(todo._id, todo.completed)}
-              className="w-5 h-5 border-2 rounded focus:ring-blue-500"
-            />
-            <span
-              className={`flex-1 ${
-                todo.completed ? "line-through text-gray-500" : ""
-              }`}
+      <motion.ul
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+        className="space-y-3"
+      >
+        <AnimatePresence mode="popLayout">
+          {todos?.data.map((todo: Todo) => (
+            <motion.li
+              key={todo._id}
+              variants={todoVariants}
+              initial="hidden"
+              animate="show"
+              exit="exit"
+              layout
+              className="flex items-center gap-3 p-3 bg-white rounded-lg shadow hover:shadow-md transition-shadow"
             >
-              {todo.title}
-            </span>
-            <button
-              onClick={() => handleDeleteTodo(todo._id)}
-              className="p-1 text-red-500 hover:text-red-700 focus:outline-none"
-            >
-              X
-            </button>
-          </li>
-        ))}
-      </ul>
+              <motion.div
+                variants={checkboxVariants}
+                initial="unchecked"
+                animate={todo.completed ? "checked" : "unchecked"}
+                whileTap="tap"
+              >
+                <input
+                  type="checkbox"
+                  checked={todo.completed}
+                  onChange={() => handleToggleTodo(todo._id, todo.completed)}
+                  className="w-5 h-5 border-2 rounded focus:ring-blue-500 transition-colors"
+                />
+              </motion.div>
+              <motion.span
+                layout
+                animate={{
+                  opacity: todo.completed ? 0.5 : 1,
+                  scale: todo.completed ? 0.98 : 1,
+                }}
+                transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                className={`flex-1 ${
+                  todo.completed ? "line-through text-gray-500" : ""
+                }`}
+              >
+                {todo.title}
+              </motion.span>
+              <motion.button
+                whileHover={{ scale: 1.1, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                onClick={() => handleDeleteTodo(todo._id)}
+                className="p-1 text-red-500 hover:text-red-700 focus:outline-none"
+              >
+                X
+              </motion.button>
+            </motion.li>
+          ))}
+        </AnimatePresence>
+      </motion.ul>
     </div>
   );
 }
