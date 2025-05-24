@@ -14,19 +14,13 @@ export function withAuth<T>(handler: AuthenticatedHandlerFunction<T>) {
     try {
       const session = await auth();
 
-      console.log("session", session);
-
       if (!session?.user) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
       }
 
-      console.log("session.user.email", session.user.email);
-
       const user = await db.user.findUnique({
         where: { email: session.user.email || "" },
       });
-
-      console.log("user", user);
 
       if (!user) {
         return NextResponse.json(

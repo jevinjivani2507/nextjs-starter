@@ -18,8 +18,6 @@ export const authConfig: AuthConfig = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      console.log("SignIn callback triggered:", { user, account, profile });
-
       if (account?.provider === "google" && profile) {
         try {
           const googleProfile = profile as {
@@ -31,8 +29,6 @@ export const authConfig: AuthConfig = {
             picture?: string;
           };
 
-          console.log("Google profile:", googleProfile);
-
           if (!googleProfile.sub || !googleProfile.email) {
             console.error("Required Google profile information missing");
             return false;
@@ -43,8 +39,6 @@ export const authConfig: AuthConfig = {
             where: { email: googleProfile.email },
             include: { accounts: true },
           });
-
-          console.log("Existing user check:", existingUser);
 
           if (existingUser) {
             // If user exists but doesn't have a Google account, link it

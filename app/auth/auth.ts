@@ -3,6 +3,14 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { authConfig } from "./auth.config";
 import db from "@/lib/db";
 
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error("NEXTAUTH_SECRET is not set");
+}
+
+if (!process.env.NEXTAUTH_URL) {
+  console.warn("NEXTAUTH_URL is not set. This may cause issues in production.");
+}
+
 export const {
   handlers: { GET, POST },
   auth,
@@ -13,6 +21,7 @@ export const {
   ...authConfig,
   trustHost: true,
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === "development",
   pages: {
     signIn: "/login",
     error: "/auth/error", // Custom error page
@@ -25,6 +34,7 @@ export const nextAuthOptions = {
   ...authConfig,
   trustHost: true,
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === "development",
   pages: {
     signIn: "/login",
     error: "/auth/error",

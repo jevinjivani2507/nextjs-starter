@@ -60,7 +60,6 @@ export default function TodoList() {
   const [newTodo, setNewTodo] = useState("");
   const queryClient = useQueryClient();
   const { todos, isTodosLoading, errorInFetchingTodos } = useTodos();
-  console.log("todos", todos);
 
   const { mutate: addTodo } = useMutation({
     mutationFn: async (todo: Omit<Todo, "id">) => {
