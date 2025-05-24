@@ -9,13 +9,13 @@ const prisma = new PrismaClient();
 export const GET = withAuth(
   async (
     _request: NextRequest,
-    { params }: { params: { id: string } },
+    { params }: { params: Promise<{ id: string }> },
     userId: string
   ) => {
     try {
       const todo = await prisma.todo.findFirst({
         where: {
-          id: params.id,
+          id: (await params).id,
           userId,
         },
       });
@@ -41,7 +41,7 @@ export const GET = withAuth(
 export const PUT = withAuth(
   async (
     request: NextRequest,
-    { params }: { params: { id: string } },
+    { params }: { params: Promise<{ id: string }> },
     userId: string
   ) => {
     try {
@@ -49,7 +49,7 @@ export const PUT = withAuth(
 
       const updatedTodo = await prisma.todo.update({
         where: {
-          id: params.id,
+          id: (await params).id,
           userId,
         },
         data: body,
@@ -76,13 +76,13 @@ export const PUT = withAuth(
 export const DELETE = withAuth(
   async (
     _request: NextRequest,
-    { params }: { params: { id: string } },
+    { params }: { params: Promise<{ id: string }> },
     userId: string
   ) => {
     try {
       await prisma.todo.delete({
         where: {
-          id: params.id,
+          id: (await params).id,
           userId,
         },
       });
