@@ -9,7 +9,7 @@ import { motion, AnimatePresence, Variants } from "framer-motion";
 import { X } from "lucide-react";
 
 interface Todo {
-  _id: string;
+  id: string;
   title: string;
   completed: boolean;
 }
@@ -60,9 +60,10 @@ export default function TodoList() {
   const [newTodo, setNewTodo] = useState("");
   const queryClient = useQueryClient();
   const { todos, isTodosLoading, errorInFetchingTodos } = useTodos();
+  console.log("todos", todos);
 
   const { mutate: addTodo } = useMutation({
-    mutationFn: async (todo: Omit<Todo, "_id">) => {
+    mutationFn: async (todo: Omit<Todo, "id">) => {
       const response = await axios.post("/api/todos", todo);
       return response.data;
     },
@@ -161,7 +162,7 @@ export default function TodoList() {
         <AnimatePresence mode="popLayout">
           {todos?.data.map((todo: Todo) => (
             <motion.li
-              key={todo._id}
+              key={todo.id}
               variants={todoVariants}
               initial="hidden"
               animate="show"
@@ -178,7 +179,7 @@ export default function TodoList() {
                 <input
                   type="checkbox"
                   checked={todo.completed}
-                  onChange={() => handleToggleTodo(todo._id, todo.completed)}
+                  onChange={() => handleToggleTodo(todo.id, todo.completed)}
                   className="w-5 h-5 border-2 rounded focus:ring-blue-500 transition-colors"
                 />
               </motion.div>
@@ -199,7 +200,7 @@ export default function TodoList() {
                 whileHover={{ scale: 1.1, rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                onClick={() => handleDeleteTodo(todo._id)}
+                onClick={() => handleDeleteTodo(todo.id)}
                 className="p-1 text-red-500 hover:text-red-700 focus:outline-none"
               >
                 <X />
