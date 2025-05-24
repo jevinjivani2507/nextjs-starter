@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Connection } from "mongoose";
 
 if (!process.env.MONGODB_URI) {
   throw new Error("Please add your MONGODB_URI to .env.local");
@@ -7,8 +7,8 @@ if (!process.env.MONGODB_URI) {
 const MONGODB_URI: string = process.env.MONGODB_URI;
 
 interface MongooseConnection {
-  conn: typeof mongoose | null;
-  promise: Promise<typeof mongoose> | null;
+  conn: Connection | null;
+  promise: Promise<Connection> | null;
 }
 
 let cached: MongooseConnection = (global as any).mongoose || {
@@ -29,7 +29,9 @@ async function connectDB() {
       bufferCommands: false,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI, opts);
+    cached.promise = mongoose
+      .connect(MONGODB_URI, opts)
+      .then((mongoose) => mongoose.connection);
   }
 
   try {

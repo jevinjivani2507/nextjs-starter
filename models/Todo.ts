@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import { Schema, model, models } from "mongoose";
 import { Todo } from "@/types/Todo";
 
 const TodoSchema: Schema = new Schema<Todo>(
@@ -7,7 +7,7 @@ const TodoSchema: Schema = new Schema<Todo>(
     description: { type: String },
     completed: { type: Boolean, default: false },
     userId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
@@ -15,7 +15,6 @@ const TodoSchema: Schema = new Schema<Todo>(
   { timestamps: true }
 );
 
-const TodoModel =
-  mongoose.models.Todo || mongoose.model<Todo>("Todo", TodoSchema);
+const TodoModel = models?.Todo || model<Todo>("Todo", TodoSchema);
 
 export default TodoModel;
