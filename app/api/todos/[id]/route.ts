@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import TodoModel from "@/models/Todo";
 import { withAuth } from "@/middleware/withAuth";
+import { PrismaClient, Prisma } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 // GET single todo
 export const GET = withAuth(
@@ -11,7 +13,12 @@ export const GET = withAuth(
     userId: string
   ) => {
     try {
-      const todo = await TodoModel.findOne({ _id: params.id, userId });
+      const todo = await prisma.todo.findFirst({
+        where: {
+          id: params.id,
+          userId,
+        },
+      });
 
       if (!todo) {
         return NextResponse.json(
@@ -40,11 +47,13 @@ export const PUT = withAuth(
     try {
       const body = await request.json();
 
-      const updatedTodo = await TodoModel.findOneAndUpdate(
-        { _id: params.id, userId },
-        { $set: { ...body } },
-        { new: true, runValidators: true }
-      );
+      const updatedTodo = await prisma.todo.update({
+        where: {
+          id: params.id,
+          userId,
+        },
+        data: body,
+      });
 
       if (!updatedTodo) {
         return NextResponse.json(
@@ -71,23 +80,27 @@ export const DELETE = withAuth(
     userId: string
   ) => {
     try {
-      const deletedTodo = await TodoModel.findOneAndDelete({
-        _id: params.id,
-        userId,
+      await prisma.todo.delete({
+        where: {
+          id: params.id,
+          userId,
+        },
       });
-
-      if (!deletedTodo) {
-        return NextResponse.json(
-          { message: "Todo not found" },
-          { status: 404 }
-        );
-      }
 
       return NextResponse.json(
         { message: "Todo deleted successfully" },
         { status: 200 }
       );
     } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        return NextResponse.json(
+          { message: "Todo not found" },
+          { status: 404 }
+        );
+      }
       return NextResponse.json(
         { message: "Failed to delete todo" },
         { status: 500 }

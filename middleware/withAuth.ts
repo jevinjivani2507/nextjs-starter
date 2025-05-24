@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth } from "@/app/auth/auth";
-import { withMongoDb, HandlerFunction } from "./mongodb";
-import UserModel from "@/models/User";
+import db from "@/lib/db";
 
 export type AuthenticatedHandlerFunction<T = any> = (
   req: NextRequest,
@@ -10,34 +9,39 @@ export type AuthenticatedHandlerFunction<T = any> = (
   userId: string
 ) => Promise<NextResponse>;
 
-export function withAuth<T>(
-  handler: AuthenticatedHandlerFunction<T>
-): HandlerFunction<T> {
-  return withMongoDb(async (req: NextRequest, params: T) => {
+export function withAuth<T>(handler: AuthenticatedHandlerFunction<T>) {
+  return async (req: NextRequest, params: T) => {
     try {
       const session = await auth();
+
+      console.log("session", session);
 
       if (!session?.user) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
       }
 
-      // Get user from database
-      const user = await UserModel.findOne({ email: session.user.email });
+      console.log("session.user.email", session.user.email);
+
+      const user = await db.user.findUnique({
+        where: { email: session.user.email || "" },
+      });
+
+      console.log("user", user);
 
       if (!user) {
         return NextResponse.json(
-          { message: "User not found" },
+          { message: "User not found here" },
           { status: 404 }
         );
       }
 
-      return handler(req, params, user._id.toString());
+      return handler(req, params, user.id);
     } catch (error) {
       console.error("Auth error:", error);
       return NextResponse.json(
-        { message: "Internal Server Error" },
+        { message: "Internal Server Error Auth" },
         { status: 500 }
       );
     }
-  });
+  };
 }
