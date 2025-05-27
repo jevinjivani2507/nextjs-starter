@@ -40,27 +40,35 @@ export const authConfig: AuthConfig = {
             include: { accounts: true },
           });
 
-          if (existingUser) {
+          console.log("existingUser", existingUser);
+
+          if (!existingUser) {
             // If user exists but doesn't have a Google account, link it
-            if (
-              !existingUser.accounts.some((acc) => acc.provider === "google")
-            ) {
-              await db.account.create({
-                data: {
-                  userId: existingUser.id,
-                  type: "oauth",
-                  provider: "google",
-                  providerAccountId: googleProfile.sub,
-                  access_token: account.access_token || null,
-                  refresh_token: account.refresh_token || null,
-                  expires_at: account.expires_at || null,
-                  token_type: account.token_type || null,
-                  scope: account.scope || null,
-                  id_token: account.id_token || null,
-                  session_state: (account.session_state as string) || null,
+            await db.user.create({
+              data: {
+                googleId: googleProfile.sub,
+                firstName: googleProfile.given_name || "Unknown",
+                lastName: googleProfile.family_name || "Unknown",
+                displayName: googleProfile.name || "Unknown User",
+                email: googleProfile.email,
+                avatar: googleProfile.picture,
+                accounts: {
+                  create: {
+                    type: "oauth",
+                    provider: "google",
+                    providerAccountId: googleProfile.sub,
+                    access_token: account.access_token || null,
+                    refresh_token: account.refresh_token || null,
+                    expires_at: account.expires_at || null,
+                    token_type: account.token_type || null,
+                    scope: account.scope || null,
+                    id_token: account.id_token || null,
+                    session_state: (account.session_state as string) || null,
+                  },
                 },
-              });
-            }
+              },
+            });
+
             return true;
           }
 
