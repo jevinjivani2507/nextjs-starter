@@ -38,7 +38,7 @@ export default function Home() {
             <Button onClick={() => router.push("/login")}>Login</Button>
           )}
         </div>
-        <div className="shadow-shadow rounded-base bg-background border-2 p-4">
+        <div className="shadow-shadow rounded-base bg-background min-h-[500px] border-2 p-4">
           <div className="mb-8 flex flex-col items-center justify-center">
             <h1 className="text-4xl font-bold">Try out the Todo App</h1>
             <p className="text-gray-600">This is a simple todo app</p>

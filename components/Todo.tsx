@@ -10,6 +10,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Todo {
   id: string;
@@ -28,24 +29,8 @@ const containerVariants: Variants = {
   },
 };
 
-const todoVariants: Variants = {
-  hidden: { opacity: 0, y: -10 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.2,
-      ease: "easeOut",
-    },
-  },
-  exit: {
-    opacity: 0,
-    y: -10,
-    transition: {
-      duration: 0.15,
-      ease: "easeIn",
-    },
-  },
+const TodoSkeleton = () => {
+  return <Skeleton className="h-14 w-full" />;
 };
 
 export default function TodoList() {
@@ -183,44 +168,48 @@ export default function TodoList() {
         className="space-y-3"
       >
         <AnimatePresence mode="popLayout">
-          {todos?.data.map((todo: Todo) => (
-            <motion.li
-              key={todo.id}
-              variants={todoVariants}
-              initial="hidden"
-              animate="show"
-              exit="exit"
-              layout
-              className="rounded-base bg-secondary-background flex items-center gap-3 border-2 p-3 hover:shadow-none"
-            >
-              <Checkbox
-                checked={todo.completed}
-                onCheckedChange={() =>
-                  handleToggleTodo(todo.id, todo.completed)
-                }
-              />
-              <motion.span
-                layout
-                animate={{
-                  opacity: todo.completed ? 0.6 : 1,
-                  scale: todo.completed ? 0.99 : 1,
-                }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
-                className={`flex-1 ${
-                  todo.completed ? "text-gray-500 line-through" : ""
-                }`}
-              >
-                {todo.title}
-              </motion.span>
-              <Button
-                variant="noShadow"
-                size="icon"
-                onClick={() => handleDeleteTodo(todo.id)}
-              >
-                <X />
-              </Button>
-            </motion.li>
-          ))}
+          {isTodosLoading
+            ? Array.from({ length: 3 }).map((_, index) => (
+                <TodoSkeleton key={index} />
+              ))
+            : todos?.data.map((todo: Todo) => (
+                <motion.li
+                  key={todo.id}
+                  // variants={todoVariants}
+                  // initial="hidden"
+                  // animate="show"
+                  // exit="exit"
+                  // layout
+                  className="rounded-base bg-secondary-background flex items-center gap-3 border-2 p-3 hover:shadow-none"
+                >
+                  <Checkbox
+                    checked={todo.completed}
+                    onCheckedChange={() =>
+                      handleToggleTodo(todo.id, todo.completed)
+                    }
+                  />
+                  <motion.span
+                    // layout
+                    // animate={{
+                    //   opacity: todo.completed ? 0.6 : 1,
+                    //   scale: todo.completed ? 0.99 : 1,
+                    // }}
+                    // transition={{ duration: 0.2, ease: "easeInOut" }}
+                    className={`flex-1 ${
+                      todo.completed ? "text-gray-500 line-through" : ""
+                    }`}
+                  >
+                    {todo.title}
+                  </motion.span>
+                  <Button
+                    variant="noShadow"
+                    size="icon"
+                    onClick={() => handleDeleteTodo(todo.id)}
+                  >
+                    <X />
+                  </Button>
+                </motion.li>
+              ))}
         </AnimatePresence>
       </motion.ul>
     </>
