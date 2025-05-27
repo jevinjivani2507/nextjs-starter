@@ -126,7 +126,7 @@ export default function TodoList() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
+    <div className="mx-auto max-w-2xl p-4">
       <form onSubmit={handleSubmit} className="mb-6">
         <motion.div
           className="flex gap-2"
@@ -139,13 +139,13 @@ export default function TodoList() {
             value={newTodo}
             onChange={(e) => setNewTodo(e.target.value)}
             placeholder="Add a new todo..."
-            className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 rounded-lg border px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
           <motion.button
             type="submit"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.95 }}
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="rounded-lg bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
           >
             Add
           </motion.button>
@@ -167,7 +167,7 @@ export default function TodoList() {
               animate="show"
               exit="exit"
               layout
-              className="flex items-center gap-3 p-3 bg-white rounded-lg shadow hover:shadow-md transition-shadow"
+              className="flex items-center gap-3 rounded-lg bg-white p-3 shadow transition-shadow hover:shadow-md"
             >
               <motion.div
                 variants={checkboxVariants}
@@ -179,7 +179,7 @@ export default function TodoList() {
                   type="checkbox"
                   checked={todo.completed}
                   onChange={() => handleToggleTodo(todo.id, todo.completed)}
-                  className="w-5 h-5 border-2 rounded focus:ring-blue-500 transition-colors"
+                  className="h-5 w-5 rounded border-2 transition-colors focus:ring-blue-500"
                 />
               </motion.div>
               <motion.span
@@ -190,7 +190,7 @@ export default function TodoList() {
                 }}
                 transition={{ type: "spring", stiffness: 300, damping: 24 }}
                 className={`flex-1 ${
-                  todo.completed ? "line-through text-gray-500" : ""
+                  todo.completed ? "text-gray-500 line-through" : ""
                 }`}
               >
                 {todo.title}
