@@ -27,7 +27,8 @@ const GoogleIcon = () => {
 };
 
 export default function LoginPage() {
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     try {
       await signIn("google", {
         callbackUrl: "/",
@@ -42,8 +43,8 @@ export default function LoginPage() {
     <div className="bg-secondary-background flex min-h-screen items-center justify-center">
       <div className="bg-background shadow-shadow rounded-base border-2 p-8">
         <h1 className="mb-6 text-center text-2xl font-bold">Welcome Back</h1>
-        <form className="space-y-4">
-          <Button onClick={handleGoogleSignIn} variant="neutral">
+        <form className="space-y-4" onSubmit={handleGoogleSignIn}>
+          <Button variant="neutral" type="submit">
             <GoogleIcon />
             Continue with Google
           </Button>
