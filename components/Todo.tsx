@@ -58,15 +58,30 @@ export default function TodoList() {
       const response = await axios.post("/api/todos", todo);
       return response.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["todos"], exact: true });
-      toast.success("Todo added successfully");
+    onMutate: async (newTodo) => {
+      await queryClient.cancelQueries({ queryKey: ["todos"] });
+
+      const previousTodos = queryClient.getQueryData(["todos"]);
+
+      queryClient.setQueryData(["todos"], (old: any) => ({
+        ...old,
+        data: [{ id: "temp-" + Date.now(), ...newTodo }, ...old.data],
+      }));
+
+      return { previousTodos };
     },
-    onError: () => {
+    onError: (err, newTodo, context) => {
+      queryClient.setQueryData(["todos"], context?.previousTodos);
       toast.error("Failed to add todo");
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["todos"] });
+    onSuccess: (data) => {
+      queryClient.setQueryData(["todos"], (old: any) => ({
+        ...old,
+        data: old.data.map((todo: Todo) =>
+          todo.id.startsWith("temp-") ? data : todo,
+        ),
+      }));
+      toast.success("Todo added successfully");
     },
   });
 
@@ -81,15 +96,25 @@ export default function TodoList() {
       const response = await axios.put(`/api/todos/${id}`, { completed });
       return response.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["todos"], exact: true });
-      toast.success("Todo updated successfully");
+    onMutate: async ({ id, completed }) => {
+      await queryClient.cancelQueries({ queryKey: ["todos"] });
+      const previousTodos = queryClient.getQueryData(["todos"]);
+
+      queryClient.setQueryData(["todos"], (old: any) => ({
+        ...old,
+        data: old.data.map((todo: Todo) =>
+          todo.id === id ? { ...todo, completed } : todo,
+        ),
+      }));
+
+      return { previousTodos };
     },
-    onError: () => {
+    onError: (err, variables, context) => {
+      queryClient.setQueryData(["todos"], context?.previousTodos);
       toast.error("Failed to update todo");
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["todos"] });
+    onSuccess: () => {
+      toast.success("Todo updated successfully");
     },
   });
 
@@ -98,11 +123,20 @@ export default function TodoList() {
       const response = await axios.delete(`/api/todos/${id}`);
       return response.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["todos"], exact: true });
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["todos"] });
+      const previousTodos = queryClient.getQueryData(["todos"]);
+
+      queryClient.setQueryData(["todos"], (old: any) => ({
+        ...old,
+        data: old.data.filter((todo: Todo) => todo.id !== id),
+      }));
+
+      return { previousTodos };
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["todos"] });
+    onError: (err, id, context) => {
+      queryClient.setQueryData(["todos"], context?.previousTodos);
+      toast.error("Failed to delete todo");
     },
   });
 
@@ -111,17 +145,14 @@ export default function TodoList() {
     if (!newTodo.trim()) return;
     addTodo({ title: newTodo, completed: false });
     setNewTodo("");
-    toast.success("Todo added successfully");
   };
 
   const handleToggleTodo = (id: string, currentCompleted: boolean) => {
     toggleTodo({ id, completed: !currentCompleted });
-    toast.success("Todo updated successfully");
   };
 
   const handleDeleteTodo = (id: string) => {
     deleteTodoMutation(id);
-    toast.success("Todo deleted successfully");
   };
 
   return (
