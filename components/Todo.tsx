@@ -7,6 +7,9 @@ import axios from "axios";
 import { toast } from "sonner";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Todo {
   id: string;
@@ -19,41 +22,30 @@ const containerVariants: Variants = {
   show: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.3,
+      staggerChildren: 0.05,
+      delayChildren: 0.1,
     },
   },
 };
 
 const todoVariants: Variants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: -10 },
   show: {
     opacity: 1,
     y: 0,
     transition: {
-      type: "spring",
-      stiffness: 300,
-      damping: 24,
+      duration: 0.2,
+      ease: "easeOut",
     },
   },
   exit: {
     opacity: 0,
-    x: -100,
+    y: -10,
     transition: {
-      type: "spring",
-      stiffness: 300,
-      damping: 24,
+      duration: 0.15,
+      ease: "easeIn",
     },
   },
-};
-
-const checkboxVariants: Variants = {
-  checked: {
-    scale: 1,
-    transition: { type: "spring", stiffness: 500, damping: 30 },
-  },
-  unchecked: { scale: 1 },
-  tap: { scale: 0.85 },
 };
 
 export default function TodoList() {
@@ -66,9 +58,6 @@ export default function TodoList() {
       const response = await axios.post("/api/todos", todo);
       return response.data;
     },
-    onMutate: () => {
-      toast.loading("Adding todo...");
-    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["todos"], exact: true });
       toast.success("Todo added successfully");
@@ -77,7 +66,7 @@ export default function TodoList() {
       toast.error("Failed to add todo");
     },
     onSettled: () => {
-      toast.dismiss();
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
     },
   });
 
@@ -94,6 +83,13 @@ export default function TodoList() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["todos"], exact: true });
+      toast.success("Todo updated successfully");
+    },
+    onError: () => {
+      toast.error("Failed to update todo");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
     },
   });
 
@@ -104,6 +100,9 @@ export default function TodoList() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["todos"], exact: true });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
     },
   });
 
@@ -126,29 +125,23 @@ export default function TodoList() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl p-4">
+    <>
       <form onSubmit={handleSubmit} className="mb-6">
         <motion.div
           className="flex gap-2"
-          initial={{ opacity: 0, y: 100 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 24 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
         >
-          <input
+          <Input
             type="text"
             value={newTodo}
             onChange={(e) => setNewTodo(e.target.value)}
             placeholder="Add a new todo..."
-            className="flex-1 rounded-lg border px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
-          <motion.button
-            type="submit"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.95 }}
-            className="rounded-lg bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-          >
+          <Button type="submit" variant="noShadow">
             Add
-          </motion.button>
+          </Button>
         </motion.div>
       </form>
 
@@ -167,47 +160,38 @@ export default function TodoList() {
               animate="show"
               exit="exit"
               layout
-              className="flex items-center gap-3 rounded-lg bg-white p-3 shadow transition-shadow hover:shadow-md"
+              className="rounded-base bg-secondary-background flex items-center gap-3 border-2 p-3 hover:shadow-none"
             >
-              <motion.div
-                variants={checkboxVariants}
-                initial="unchecked"
-                animate={todo.completed ? "checked" : "unchecked"}
-                whileTap="tap"
-              >
-                <input
-                  type="checkbox"
-                  checked={todo.completed}
-                  onChange={() => handleToggleTodo(todo.id, todo.completed)}
-                  className="h-5 w-5 rounded border-2 transition-colors focus:ring-blue-500"
-                />
-              </motion.div>
+              <Checkbox
+                checked={todo.completed}
+                onCheckedChange={() =>
+                  handleToggleTodo(todo.id, todo.completed)
+                }
+              />
               <motion.span
                 layout
                 animate={{
-                  opacity: todo.completed ? 0.5 : 1,
-                  scale: todo.completed ? 0.98 : 1,
+                  opacity: todo.completed ? 0.6 : 1,
+                  scale: todo.completed ? 0.99 : 1,
                 }}
-                transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
                 className={`flex-1 ${
                   todo.completed ? "text-gray-500 line-through" : ""
                 }`}
               >
                 {todo.title}
               </motion.span>
-              <motion.button
-                whileHover={{ scale: 1.1, rotate: 90 }}
-                whileTap={{ scale: 0.9 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              <Button
+                variant="noShadow"
+                size="icon"
                 onClick={() => handleDeleteTodo(todo.id)}
-                className="p-1 text-red-500 hover:text-red-700 focus:outline-none"
               >
                 <X />
-              </motion.button>
+              </Button>
             </motion.li>
           ))}
         </AnimatePresence>
       </motion.ul>
-    </div>
+    </>
   );
 }
