@@ -23,7 +23,7 @@ export const {
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === "development",
   pages: {
-    signIn: "/login",
+    signIn: "/",
     error: "/auth/error", // Custom error page
   },
 });
@@ -36,7 +36,7 @@ export const nextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === "development",
   pages: {
-    signIn: "/login",
+    signIn: "/",
     error: "/auth/error",
   },
 };

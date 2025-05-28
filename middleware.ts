@@ -6,11 +6,15 @@ export async function middleware(request: NextRequest) {
   try {
     const session = await auth();
 
-    // Add the paths that should be public
-    const publicPaths = ["/login", "/api/auth", "/auth/error"];
+    console.log("session", session);
+
+    // Only these paths should be public
+    const publicPaths = ["/", "/api/auth", "/auth/error"];
     const isPublicPath = publicPaths.some((path) =>
-      request.nextUrl.pathname.startsWith(path)
+      request.nextUrl.pathname.endsWith(path),
     );
+
+    console.log("isPublicPath", isPublicPath);
 
     // Allow static files and API routes
     if (
@@ -21,21 +25,22 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
+    // If user is not logged in and trying to access any non-public route
     if (!session && !isPublicPath) {
-      const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("callbackUrl", request.url);
-      return NextResponse.redirect(loginUrl);
+      // Redirect to home page
+      return NextResponse.redirect(new URL("/", request.url));
     }
 
-    if (session && request.nextUrl.pathname === "/login") {
-      return NextResponse.redirect(new URL("/", request.url));
+    // If user is logged in and trying to access login page, redirect to todo
+    if (session && request.nextUrl.pathname === "/") {
+      return NextResponse.redirect(new URL("/todo", request.url));
     }
 
     return NextResponse.next();
   } catch (error) {
     console.error("Middleware error:", error);
-    // On error, allow the request to proceed to avoid blocking legitimate requests
-    return NextResponse.next();
+    // On error, redirect to home page
+    return NextResponse.redirect(new URL("/", request.url));
   }
 }
 
